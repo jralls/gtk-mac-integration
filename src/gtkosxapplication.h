@@ -145,6 +145,7 @@ gchar *quartz_application_get_resource_path(void);
 gchar *quartz_application_get_executable_path(void);
 gchar *quartz_application_get_bundle_id(void);
 gchar *quartz_application_get_bundle_info(const gchar *key);
+void quartz_application_change_current_directory_to_resource_path(void);
 
 #ifndef GTK_DISABLE_DEPRECATED
 #define gtk_osxapplication_get_bundle_path(x) \

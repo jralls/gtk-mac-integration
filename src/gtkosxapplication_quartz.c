@@ -1193,3 +1193,22 @@ quartz_application_get_bundle_info(const gchar *key)
   [pool release];
   return NULL;
 }
+
+/**
+ * quartz_application_change_current_directory_to_resource_path:
+ * Change the current directory to Resource path, if in a bundle.
+ */
+void
+quartz_application_change_current_directory_to_resource_path(void)
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  if ([[NSBundle mainBundle] bundleIdentifier]) {
+    NSString *path = [[NSBundle mainBundle] resourcePath];
+    if (path) {
+      NSFileManager *fm =[[NSFileManager alloc] init];
+      [fm changeCurrentDirectoryPath: path];
+      [fm release];
+    }
+    [pool release];
+  }
+}
