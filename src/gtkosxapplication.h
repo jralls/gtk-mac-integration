@@ -143,5 +143,6 @@ gchar *quartz_application_get_executable_path(void);
 gchar *quartz_application_get_bundle_id(void);
 gchar *quartz_application_get_bundle_info(const gchar *key);
 
+G_END_DECLS
 
 #endif /* __GTK_OSX_APPLICATION_H__ */
