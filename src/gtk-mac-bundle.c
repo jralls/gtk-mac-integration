@@ -22,7 +22,6 @@
  * -psn_... arguments?
  */
 
-#ifndef __x86_64__
 #include <gtk/gtk.h>
 #include <Carbon/Carbon.h>
 
@@ -35,6 +34,7 @@ struct GtkMacBundlePriv {
   gchar       *path;
   gchar       *id;
   gchar       *datadir;
+  gchar       *resourcesdir;
   gchar       *localedir;
   UInt32       type;
   UInt32       creator;
@@ -140,6 +140,7 @@ mac_bundle_finalize (GObject *object)
   g_free (priv->path);
   g_free (priv->id);
   g_free (priv->datadir);
+  g_free (priv->resourcesdir);
   g_free (priv->localedir);
 
   CFRelease (priv->cf_bundle);
@@ -253,6 +254,25 @@ gtk_mac_bundle_get_datadir (GtkMacBundle *bundle)
     }
 
   return priv->datadir;
+}
+
+const gchar *
+gtk_mac_bundle_get_resourcesdir (GtkMacBundle *bundle)
+{
+  GtkMacBundlePriv *priv = GET_PRIV (bundle);
+
+  if (!gtk_mac_bundle_get_is_app_bundle (bundle))
+    return NULL;
+
+  if (!priv->resourcesdir)
+    {
+      priv->resourcesdir = g_build_filename (priv->path,
+                                        "Contents",
+                                        "Resources",
+                                        NULL);
+    }
+
+  return priv->resourcesdir;
 }
 
 const gchar *
@@ -376,5 +396,3 @@ gtk_mac_bundle_get_resource_path (GtkMacBundle *bundle,
 
   return path;
 }
-
-#endif //__x86_64__
