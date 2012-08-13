@@ -18,7 +18,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __x86_64__
 /* FIXME: Add example like this to docs for the open documents stuff:
 
     <key>CFBundleDocumentTypes</key>
@@ -464,4 +463,3 @@ gtk_mac_attention_type_get_type (void)
   return 0;
 }
 
-#endif // __x86_64__

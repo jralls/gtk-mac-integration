@@ -23,7 +23,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __x86_64__
 #include "config.h"
 
 #include <gtk/gtk.h>
@@ -1266,4 +1265,3 @@ gtk_mac_menu_sync(GtkMenuShell *menu_shell) {
 		     carbon_menu->toplevel, DEBUG_SYNC);
 }
 
-#endif __x86_64__

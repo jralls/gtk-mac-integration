@@ -21,7 +21,6 @@
 #ifndef __GTK_MAC_BUNDLE_H__
 #define __GTK_MAC_BUNDLE_H__
 
-#ifndef __x86_64__
 #include <glib-object.h>
 
 G_BEGIN_DECLS
@@ -53,6 +52,7 @@ const gchar * gtk_mac_bundle_get_path          (GtkMacBundle *bundle);
 gboolean      gtk_mac_bundle_get_is_app_bundle (GtkMacBundle *bundle);
 const gchar * gtk_mac_bundle_get_localedir     (GtkMacBundle *bundle);
 const gchar * gtk_mac_bundle_get_datadir       (GtkMacBundle *bundle);
+const gchar * gtk_mac_bundle_get_resourcesdir  (GtkMacBundle *bundle);
 gchar *       gtk_mac_bundle_get_resource_path (GtkMacBundle *bundle,
                                                 const gchar  *name,
                                                 const gchar  *type,
@@ -60,5 +60,4 @@ gchar *       gtk_mac_bundle_get_resource_path (GtkMacBundle *bundle,
 
 G_END_DECLS
 
-#endif /* __x86_64__*/
 #endif /* __GTK_MAC_BUNDLE_H__ */
