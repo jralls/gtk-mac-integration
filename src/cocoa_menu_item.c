@@ -31,6 +31,7 @@
 #include "cocoa_menu_item.h"
 #include "cocoa_menu.h"
 #include "getlabel.h"
+#include "gtk-mac-image-utils.h"
 #import "GNSMenuBar.h"
 
 //#define DEBUG(format, ...) g_printerr ("%s: " format, G_STRFUNC, ## __VA_ARGS__)
@@ -446,6 +447,107 @@ cocoa_menu_item_sync (GtkWidget* menu_item)
 }
 
 /*
+ * nsimage_from_pixbuf:
+ * @pixbuf: The GdkPixbuf* to convert
+ *
+ * Create an NSImage from a CGImageRef.
+ * Lifted from http://www.cocoadev.com/index.pl?CGImageRef
+ *
+ * Returns: An auto-released NSImage*
+ */
+static NSImage*
+nsimage_from_pixbuf(GdkPixbuf *pixbuf)
+{
+  CGImageRef image = NULL;
+  NSRect imageRect = NSMakeRect(0.0, 0.0, 0.0, 0.0);
+  CGContextRef imageContext = nil;
+  NSImage* newImage = nil;
+
+  g_return_val_if_fail (pixbuf !=  NULL, NULL);
+  image = gtkosx_create_cgimage_from_pixbuf (pixbuf);
+  // Get the image dimensions.
+  imageRect.size.height = CGImageGetHeight(image);
+  imageRect.size.width = CGImageGetWidth(image);
+
+  // Create a new image to receive the Quartz image data.
+  newImage = [[[NSImage alloc] initWithSize:imageRect.size] autorelease];
+  [newImage lockFocus];
+
+  // Get the Quartz context and draw.
+  imageContext = (CGContextRef)[[NSGraphicsContext currentContext]
+                                graphicsPort];
+  CGContextDrawImage(imageContext, *(CGRect*)&imageRect, image);
+  [newImage unlockFocus];
+  CGImageRelease (image);
+  return newImage;
+}
+
+/*
+ * If the menu item does contain an image Widget, depending of what this widget is,
+ * get a PixBuf with the following method:
+ *   - menu_item is GtkImage of type GTK_IMAGE_PIXBUF: use gtk_image_get_pixbuf()
+ *   - menu_item is GtkImage of type GTK_IMAGE_STOCK: use gtk_widget_render_icon()
+ *   - menu_item is GtkWidget: use gtk_offscreen_window_get_pixbuf() on GtkOffscreenWindow
+ */
+static void
+cocoa_menu_item_add_item_image (_GNSMenuItem* cocoa_item, GtkWidget* menu_item)
+{
+  GtkWidget *menu_image = gtk_image_menu_item_get_image (GTK_IMAGE_MENU_ITEM(menu_item));
+
+  if (menu_image) {
+    NSImage *image = nil;
+    if (GTK_IS_IMAGE (menu_image)) {
+      if (gtk_image_get_storage_type(GTK_IMAGE(menu_image)) == GTK_IMAGE_PIXBUF) {
+        DEBUG("Menu image is GTK_IMAGE_PIXBUF\n");
+        GdkPixbuf *pixbuf = gtk_image_get_pixbuf(GTK_IMAGE(menu_image));
+        image = nsimage_from_pixbuf(pixbuf);
+      }
+      else if (gtk_image_get_storage_type(GTK_IMAGE(menu_image)) == GTK_IMAGE_STOCK) {
+        DEBUG("Menu image is GTK_IMAGE_STOCK\n");
+        gchar *stock_id;
+        GtkIconSize size;
+        gtk_image_get_stock(GTK_IMAGE(menu_image), &stock_id, &size);
+        GdkPixbuf *pixbuf = gtk_widget_render_icon(menu_image, stock_id, size, "");
+        image = nsimage_from_pixbuf(pixbuf);
+        g_object_unref(pixbuf);
+      }
+    }
+    if (!image) {
+      DEBUG("Menu image is GTK_WIDGET\n");
+      // Take menu image widget out of menu item
+      g_object_ref(menu_image);
+      gtk_widget_unparent (menu_image);
+      GTK_IMAGE_MENU_ITEM(menu_item)->image = NULL;
+      g_object_notify(G_OBJECT(menu_item), "image");
+      // Put menu image widget in Offscreen Window, take a pixbuf
+      GtkWidget *offscreenWindow = gtk_offscreen_window_new();
+      gtk_container_add(GTK_CONTAINER(offscreenWindow), menu_image);
+      // Show with proper size
+      gtk_widget_show_all(offscreenWindow);
+      GtkRequisition req;
+      GtkAllocation alloc;
+      gtk_widget_size_request (menu_image, &req);
+      alloc.x = alloc.y = 0;
+      alloc.width = req.width;
+      alloc.height = req.height;
+      gtk_widget_size_allocate (menu_image, &alloc);
+      while (gtk_events_pending ())
+        gtk_main_iteration_do (FALSE);
+      // Take a pixbuf of the offscreen window, convert to image
+      GdkPixbuf *pixbuf = gtk_offscreen_window_get_pixbuf(GTK_OFFSCREEN_WINDOW(offscreenWindow));
+      image = nsimage_from_pixbuf(pixbuf);
+      g_object_unref(pixbuf);
+      // Take menu image widget out of offscreen window, back into menu item
+      gtk_container_remove(GTK_CONTAINER(offscreenWindow), menu_image);
+      gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(menu_item), menu_image);
+      g_object_unref(menu_image);
+    }
+    [cocoa_item setImage: image];
+  }
+
+}
+
+/*
  * Public Functions
  */
 
@@ -487,6 +589,9 @@ cocoa_menu_item_add_item (NSMenu* cocoa_menu, GtkWidget* menu_item, int index)
     DEBUG ("\tan item\n");
   }
   cocoa_menu_item_connect (menu_item, (_GNSMenuItem*) cocoa_item, label);
+  if (GTK_IS_IMAGE_MENU_ITEM (menu_item)) {
+    cocoa_menu_item_add_item_image(cocoa_item, menu_item);
+  }
   [ cocoa_item setEnabled:YES];
 
   /* connect GtkMenuItem and _GNSMenuItem so that we can notice changes
