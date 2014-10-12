@@ -22,6 +22,10 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface GtkApplicationDelegate : NSObject {}
+@interface GtkApplicationDelegate : NSObject {
+@private
+CFMachPortRef machPort;
+bool shouldExit;
+}
 @end
 

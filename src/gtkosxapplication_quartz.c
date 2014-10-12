@@ -444,6 +444,51 @@ g_cclosure_marshal_BOOLEAN__STRING (GClosure     *closure,
   g_value_set_boolean (return_value, v_return);
 }
 
+/*
+ * g_cclosure_marshal_BOOLEAN__INT_BOOLEAN_BOOLEAN:
+ *
+ * A private marshaller for handlers which take an int and to boolean parameters and
+ * return a boolean.
+ */
+static void
+g_cclosure_marshal_BOOLEAN__INT_BOOLEAN_BOOLEAN (GClosure     *closure,
+                                    GValue       *return_value G_GNUC_UNUSED,
+                                    guint         n_param_values,
+                                    const GValue *param_values,
+                                    gpointer      invocation_hint G_GNUC_UNUSED,
+                                    gpointer      marshal_data)
+{
+  typedef gboolean (*GMarshalFunc_BOOLEAN__INT_BOOLEAN_BOOLEAN) (gpointer     data1,
+      const int arg1,
+      const gboolean arg2,
+      const gboolean arg3,
+      gpointer     data2);
+  register GMarshalFunc_BOOLEAN__INT_BOOLEAN_BOOLEAN callback;
+  register GCClosure *cc = (GCClosure*) closure;
+  register gpointer data1, data2;
+  gboolean v_return;
+
+  g_return_if_fail (n_param_values == 4);
+
+  if (G_CCLOSURE_SWAP_DATA (closure))
+    {
+      data1 = closure->data;
+      data2 = g_value_peek_pointer (param_values + 0);
+    }
+  else
+    {
+      data1 = g_value_peek_pointer (param_values + 0);
+      data2 = closure->data;
+    }
+  callback = (GMarshalFunc_BOOLEAN__INT_BOOLEAN_BOOLEAN) (marshal_data ? marshal_data : cc->callback);
+
+  v_return = callback (data1,
+                       g_value_get_int (param_values + 1),
+                       g_value_get_boolean (param_values + 2),
+                       g_value_get_boolean (param_values + 3),
+                       data2);
+  g_value_set_boolean (return_value, v_return);
+}
 
 /*
  * block_termination_accumulator:
@@ -526,6 +571,7 @@ enum
   BlockTermination,
   WillTerminate,
   OpenFile,
+  MultiMediaKey,
   LastSignal
 };
 
@@ -666,6 +712,26 @@ gtkosx_application_class_init (GtkosxApplicationClass *klass)
                   0, NULL, NULL,
                   g_cclosure_marshal_BOOLEAN__STRING,
                   G_TYPE_BOOLEAN, 1, G_TYPE_STRING);
+
+  /**
+   * GtkosxApplication::MultiMediaKey:
+   * @app: The application object
+   * @keyCode: code of the key
+   * @isDown: is the key pressed
+   * @repeat: key repeat?
+   * @user_data: Data attached at connection
+   *
+   * Emitted when a multimedia key is pressed or released.
+   *
+   * Returns: Boolean indicating that the multimedia key should not be emitted.
+   */
+  gtkosx_application_signals[MultiMediaKey] =
+    g_signal_new ("MultiMediaKey",
+                  GTKOSX_TYPE_APPLICATION,
+                  G_SIGNAL_NO_RECURSE | G_SIGNAL_ACTION,
+                  0, NULL, NULL,
+                  g_cclosure_marshal_BOOLEAN__INT_BOOLEAN_BOOLEAN,
+                  G_TYPE_BOOLEAN, 3, G_TYPE_INT, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN);
 
 }
 
