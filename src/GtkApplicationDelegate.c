@@ -186,4 +186,25 @@ extern NSMenu* _gtkosx_application_dock_menu (GtkosxApplication* app);
 	shouldExit = true;
 }
 
+
+- (BOOL)applicationShouldHandleReopen:(NSApplication *)theApplication hasVisibleWindows:(BOOL)flag
+{
+	GtkosxApplication *app = g_object_new (GTKOSX_TYPE_APPLICATION, NULL);
+	guint sig = g_signal_lookup ("Reopen", GTKOSX_TYPE_APPLICATION);
+	gboolean result = FALSE;
+	static gboolean inHandler = FALSE;
+	if (inHandler) return true;
+	if (sig)
+	{
+		inHandler = TRUE;
+		g_signal_emit (app, sig, 0, flag, &result);
+	}
+
+	g_object_unref (app);
+	inHandler = FALSE;
+	if (result)
+		return YES;
+	else
+		return NO;
+}
 @end

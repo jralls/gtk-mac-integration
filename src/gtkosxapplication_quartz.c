@@ -491,6 +491,51 @@ g_cclosure_marshal_BOOLEAN__INT_BOOLEAN_BOOLEAN (GClosure     *closure,
 }
 
 /*
+ * g_cclosure_marshal_BOOLEAN__BOOLEAN:
+ *
+ * A private marshaller for handlers which take a boolean parameter and
+ * return a boolean.
+ */
+static void
+g_cclosure_marshal_BOOLEAN__BOOLEAN (GClosure     *closure,
+                                    GValue       *return_value G_GNUC_UNUSED,
+                                    guint         n_param_values,
+                                    const GValue *param_values,
+                                    gpointer      invocation_hint G_GNUC_UNUSED,
+                                    gpointer      marshal_data)
+{
+  typedef gboolean (*GMarshalFunc_BOOLEAN__BOOLEAN) (gpointer     data1,
+      const gboolean     arg1,
+      gpointer     data2);
+  register GMarshalFunc_BOOLEAN__BOOLEAN callback;
+  register GCClosure *cc = (GCClosure*) closure;
+  register gpointer data1, data2;
+  gboolean v_return;
+
+  g_return_if_fail (n_param_values == 2);
+
+  if (G_CCLOSURE_SWAP_DATA (closure))
+    {
+      data1 = closure->data;
+      data2 = g_value_peek_pointer (param_values + 0);
+    }
+  else
+    {
+      data1 = g_value_peek_pointer (param_values + 0);
+      data2 = closure->data;
+    }
+  callback = (GMarshalFunc_BOOLEAN__BOOLEAN) (marshal_data ? marshal_data : cc->callback);
+
+  v_return = callback (data1,
+                       g_value_get_boolean (param_values + 1),
+                       data2);
+  g_value_set_boolean (return_value, v_return);
+}
+
+
+
+
+/*
  * block_termination_accumulator:
  *
  * A signal accumulator function for the NSApplicationShouldTerminate
@@ -572,6 +617,7 @@ enum
   WillTerminate,
   OpenFile,
   MultiMediaKey,
+  Reopen,
   LastSignal
 };
 
@@ -732,6 +778,25 @@ gtkosx_application_class_init (GtkosxApplicationClass *klass)
                   0, NULL, NULL,
                   g_cclosure_marshal_BOOLEAN__INT_BOOLEAN_BOOLEAN,
                   G_TYPE_BOOLEAN, 3, G_TYPE_INT, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN);
+
+  /**
+   * GtkosxApplication::Reopen:
+   * @app: The application object
+   * @flag: are there any open windows
+   *
+   * Emitted when the user clicks on the dock icon or relaunches the application.
+   * https://developer.apple.com/library/mac/documentation/Cocoa/Reference/NSApplicationDelegate_Protocol/Reference/Reference.html#jumpTo_29
+   *
+   * Returns: Boolean indicating the application should behave by default,
+   * i.e. return false if you have handled the event yourself.
+   */
+  gtkosx_application_signals[Reopen] =
+    g_signal_new ("Reopen",
+                  GTKOSX_TYPE_APPLICATION,
+                  G_SIGNAL_NO_RECURSE | G_SIGNAL_ACTION,
+                  0, NULL, NULL,
+                  g_cclosure_marshal_BOOLEAN__BOOLEAN,
+                  G_TYPE_BOOLEAN, 1, G_TYPE_BOOLEAN);
 
 }
 
