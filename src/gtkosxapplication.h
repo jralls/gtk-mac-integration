@@ -141,6 +141,12 @@ gchar *gtkosx_application_get_executable_path(void);
 gchar *gtkosx_application_get_bundle_id(void);
 gchar *gtkosx_application_get_bundle_info(const gchar *key);
 
+/* Multimedia functions */
+void gtkosx_application_set_listen_for_multimedia_keys(GtkosxApplication *self,
+					 gboolean listen_for_multimedia_keys);
+gboolean
+gtkosx_application_listen_for_multimedia_keys (GtkosxApplication *self);
+
 G_END_DECLS
 
 #endif /* __GTK_OSX_APPLICATION_H__ */

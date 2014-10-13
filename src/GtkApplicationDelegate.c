@@ -34,7 +34,7 @@ CGEventRef eventTapFunction (
 	if(type == kCGEventTapDisabledByTimeout || type == kCGEventTapDisabledByUserInput)
 	{
 		printf(__FILE__": eventTapFunction disabled, calling reenable()\n");
-		[self re_enable];
+		[self reEnableEventTap];
 	}
 	if(type < 0 || type > 0x7fffffff){
 		printf(__FILE__": eventTapFunction invalid type: %u\n", type);
@@ -124,10 +124,8 @@ extern NSMenu* _gtkosx_application_dock_menu (GtkosxApplication* app);
 }
 
 
--(void)myThreadMainMethod:(id)object
+-(void)eventTapThread:(id)object
 {
-	fprintf(stderr, "myThreadMainMethod started\n");
-	// Top-level pool
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
 	CFRunLoopRef runLoop = CFRunLoopGetCurrent();
@@ -161,24 +159,26 @@ extern NSMenu* _gtkosx_application_dock_menu (GtkosxApplication* app);
 	}
 	while (!shouldExit);
 
-	fprintf(stderr, "myThreadMainMethod stopped\n");
 	machPort = NULL;
 
-	// Release the objects in the pool.
 	[pool release];
 }
 
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
+- (void)installEventTap
 {
-	fprintf(stderr, "applicationDidFinishLaunching\n");
+	fprintf(stderr, "installing event tap\n");
 	NSThread* myThread = [[NSThread alloc] initWithTarget:self
-                                        selector:@selector(myThreadMainMethod:)
+                                        selector:@selector(eventTapThread:)
                                         object:nil];
 
 	[myThread start];
 }
 
+- (void)reEnableEventTap
+{
+	CGEventTapEnable(machPort, true);
+}
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
 {
@@ -190,7 +190,7 @@ extern NSMenu* _gtkosx_application_dock_menu (GtkosxApplication* app);
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)theApplication hasVisibleWindows:(BOOL)flag
 {
 	GtkosxApplication *app = g_object_new (GTKOSX_TYPE_APPLICATION, NULL);
-	guint sig = g_signal_lookup ("Reopen", GTKOSX_TYPE_APPLICATION);
+	guint sig = g_signal_lookup ("NSApplicationReopen", GTKOSX_TYPE_APPLICATION);
 	gboolean result = FALSE;
 	static gboolean inHandler = FALSE;
 	if (inHandler) return true;

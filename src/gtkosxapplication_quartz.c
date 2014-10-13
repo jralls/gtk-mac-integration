@@ -452,11 +452,11 @@ g_cclosure_marshal_BOOLEAN__STRING (GClosure     *closure,
  */
 static void
 g_cclosure_marshal_BOOLEAN__INT_BOOLEAN_BOOLEAN (GClosure     *closure,
-                                    GValue       *return_value G_GNUC_UNUSED,
-                                    guint         n_param_values,
-                                    const GValue *param_values,
-                                    gpointer      invocation_hint G_GNUC_UNUSED,
-                                    gpointer      marshal_data)
+                                                 GValue       *return_value G_GNUC_UNUSED,
+                                                 guint         n_param_values,
+                                                 const GValue *param_values,
+                                                 gpointer      invocation_hint G_GNUC_UNUSED,
+                                                 gpointer      marshal_data)
 {
   typedef gboolean (*GMarshalFunc_BOOLEAN__INT_BOOLEAN_BOOLEAN) (gpointer     data1,
       const int arg1,
@@ -498,11 +498,11 @@ g_cclosure_marshal_BOOLEAN__INT_BOOLEAN_BOOLEAN (GClosure     *closure,
  */
 static void
 g_cclosure_marshal_BOOLEAN__BOOLEAN (GClosure     *closure,
-                                    GValue       *return_value G_GNUC_UNUSED,
-                                    guint         n_param_values,
-                                    const GValue *param_values,
-                                    gpointer      invocation_hint G_GNUC_UNUSED,
-                                    gpointer      marshal_data)
+                                     GValue       *return_value G_GNUC_UNUSED,
+                                     guint         n_param_values,
+                                     const GValue *param_values,
+                                     gpointer      invocation_hint G_GNUC_UNUSED,
+                                     gpointer      marshal_data)
 {
   typedef gboolean (*GMarshalFunc_BOOLEAN__BOOLEAN) (gpointer     data1,
       const gboolean     arg1,
@@ -635,6 +635,7 @@ gtkosx_application_init (GtkosxApplication *self)
   [NSApplication sharedApplication];
   self->priv = GTKOSX_APPLICATION_GET_PRIVATE (self);
   self->priv->use_quartz_accelerators = TRUE;
+  self->priv->listen_for_multimedia_keys = FALSE;
   self->priv->dock_menu = NULL;
   gdk_window_add_filter (NULL, global_event_filter_func, (gpointer)self);
   self->priv->notify = [[GtkApplicationNotificationObject alloc] init];
@@ -780,7 +781,7 @@ gtkosx_application_class_init (GtkosxApplicationClass *klass)
                   G_TYPE_BOOLEAN, 3, G_TYPE_INT, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN);
 
   /**
-   * GtkosxApplication::Reopen:
+   * GtkosxApplication::NSApplicationReopen:
    * @app: The application object
    * @flag: are there any open windows
    *
@@ -791,7 +792,7 @@ gtkosx_application_class_init (GtkosxApplicationClass *klass)
    * i.e. return false if you have handled the event yourself.
    */
   gtkosx_application_signals[Reopen] =
-    g_signal_new ("Reopen",
+    g_signal_new ("NSApplicationReopen",
                   GTKOSX_TYPE_APPLICATION,
                   G_SIGNAL_NO_RECURSE | G_SIGNAL_ACTION,
                   0, NULL, NULL,
@@ -810,6 +811,10 @@ void
 gtkosx_application_ready (GtkosxApplication *self)
 {
   [NSApp finishLaunching];
+  if(self->priv->listen_for_multimedia_keys)
+  {
+    [self->priv->delegate installEventTap];
+  }
 }
 
 /*

@@ -284,3 +284,36 @@ gtkosx_type_application_attention_type_get_type (void)
   //Bogus GType, but there's no good reason to register this; it's only an enum
   return GTKOSX_TYPE_APPLICATION;
 }
+
+/**
+ * gtkosx_application_listen_for_multimedia_keys:
+ * @self: The GtkosxApplication pointer.
+ *
+ * Is the multimedia keys event tap active?
+ *
+ * Returns: a gboolean
+ */
+gboolean
+gtkosx_application_listen_for_multimedia_keys (GtkosxApplication *self)
+{
+  return self->priv->listen_for_multimedia_keys;
+}
+
+
+/**
+ * gtkosx_application_set_listen_for_multimedia_keys:
+ * @self: The GtkosxApplication pointer.
+ * @listen_for_multimedia_keys: Gboolean
+ *
+ * Register a global event tap to listen to multimedia keys and be able to inhibit
+ * them; TRUE activate the event tap; FALSE (default) won't activate the
+ * event tap.
+ *
+ * This can't be changed after gtkosx_application_ready is called
+ */
+void
+gtkosx_application_set_listen_for_multimedia_keys (GtkosxApplication *self,
+    gboolean listen_for_multimedia_keys)
+{
+  self->priv->listen_for_multimedia_keys = listen_for_multimedia_keys;
+}

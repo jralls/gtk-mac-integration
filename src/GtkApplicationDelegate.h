@@ -27,5 +27,7 @@
 CFMachPortRef machPort;
 bool shouldExit;
 }
+- (void)installEventTap;
+- (void)reEnableEventTap;
 @end
 
