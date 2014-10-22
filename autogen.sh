@@ -127,7 +127,7 @@ if grep "^AC_PROG_INTLTOOL" $CONFIGURE >/dev/null ||
     intltoolize --copy --force --automake
 fi
 
-libtoolize --force || exit $?
+$LIBTOOLIZE --force || exit $?
 
 if grep "^GTK_DOC_CHECK" $CONFIGURE > /dev/null; then
     echo "Running $GTKDOCIZE..."
