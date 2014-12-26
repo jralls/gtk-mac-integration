@@ -22,6 +22,12 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface GtkApplicationDelegate : NSObject {}
+@interface GtkApplicationDelegate : NSObject {
+@private
+CFMachPortRef machPort;
+bool shouldExit;
+}
+- (void)installEventTap;
+- (void)reEnableEventTap;
 @end
 

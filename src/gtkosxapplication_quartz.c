@@ -450,6 +450,96 @@ g_cclosure_marshal_BOOLEAN__STRING (GClosure     *closure,
   g_value_set_boolean (return_value, v_return);
 }
 
+/*
+ * g_cclosure_marshal_BOOLEAN__INT_BOOLEAN_BOOLEAN:
+ *
+ * A private marshaller for handlers which take an int and to boolean parameters and
+ * return a boolean.
+ */
+static void
+g_cclosure_marshal_BOOLEAN__INT_BOOLEAN_BOOLEAN (GClosure     *closure,
+                                                 GValue       *return_value G_GNUC_UNUSED,
+                                                 guint         n_param_values,
+                                                 const GValue *param_values,
+                                                 gpointer      invocation_hint G_GNUC_UNUSED,
+                                                 gpointer      marshal_data)
+{
+  typedef gboolean (*GMarshalFunc_BOOLEAN__INT_BOOLEAN_BOOLEAN) (gpointer     data1,
+      const int arg1,
+      const gboolean arg2,
+      const gboolean arg3,
+      gpointer     data2);
+  register GMarshalFunc_BOOLEAN__INT_BOOLEAN_BOOLEAN callback;
+  register GCClosure *cc = (GCClosure*) closure;
+  register gpointer data1, data2;
+  gboolean v_return;
+
+  g_return_if_fail (n_param_values == 4);
+
+  if (G_CCLOSURE_SWAP_DATA (closure))
+    {
+      data1 = closure->data;
+      data2 = g_value_peek_pointer (param_values + 0);
+    }
+  else
+    {
+      data1 = g_value_peek_pointer (param_values + 0);
+      data2 = closure->data;
+    }
+  callback = (GMarshalFunc_BOOLEAN__INT_BOOLEAN_BOOLEAN) (marshal_data ? marshal_data : cc->callback);
+
+  v_return = callback (data1,
+                       g_value_get_int (param_values + 1),
+                       g_value_get_boolean (param_values + 2),
+                       g_value_get_boolean (param_values + 3),
+                       data2);
+  g_value_set_boolean (return_value, v_return);
+}
+
+/*
+ * g_cclosure_marshal_BOOLEAN__BOOLEAN:
+ *
+ * A private marshaller for handlers which take a boolean parameter and
+ * return a boolean.
+ */
+static void
+g_cclosure_marshal_BOOLEAN__BOOLEAN (GClosure     *closure,
+                                     GValue       *return_value G_GNUC_UNUSED,
+                                     guint         n_param_values,
+                                     const GValue *param_values,
+                                     gpointer      invocation_hint G_GNUC_UNUSED,
+                                     gpointer      marshal_data)
+{
+  typedef gboolean (*GMarshalFunc_BOOLEAN__BOOLEAN) (gpointer     data1,
+      const gboolean     arg1,
+      gpointer     data2);
+  register GMarshalFunc_BOOLEAN__BOOLEAN callback;
+  register GCClosure *cc = (GCClosure*) closure;
+  register gpointer data1, data2;
+  gboolean v_return;
+
+  g_return_if_fail (n_param_values == 2);
+
+  if (G_CCLOSURE_SWAP_DATA (closure))
+    {
+      data1 = closure->data;
+      data2 = g_value_peek_pointer (param_values + 0);
+    }
+  else
+    {
+      data1 = g_value_peek_pointer (param_values + 0);
+      data2 = closure->data;
+    }
+  callback = (GMarshalFunc_BOOLEAN__BOOLEAN) (marshal_data ? marshal_data : cc->callback);
+
+  v_return = callback (data1,
+                       g_value_get_boolean (param_values + 1),
+                       data2);
+  g_value_set_boolean (return_value, v_return);
+}
+
+
+
 
 /*
  * block_termination_accumulator:
@@ -532,6 +622,8 @@ enum
   BlockTermination,
   WillTerminate,
   OpenFile,
+  MultiMediaKey,
+  Reopen,
   LastSignal
 };
 
@@ -549,6 +641,7 @@ gtkosx_application_init (GtkosxApplication *self)
   [NSApplication sharedApplication];
   self->priv = GTKOSX_APPLICATION_GET_PRIVATE (self);
   self->priv->use_quartz_accelerators = TRUE;
+  self->priv->listen_for_multimedia_keys = FALSE;
   self->priv->dock_menu = NULL;
   gdk_window_add_filter (NULL, global_event_filter_func, (gpointer)self);
   self->priv->notify = [[GtkApplicationNotificationObject alloc] init];
@@ -673,6 +766,45 @@ gtkosx_application_class_init (GtkosxApplicationClass *klass)
                   g_cclosure_marshal_BOOLEAN__STRING,
                   G_TYPE_BOOLEAN, 1, G_TYPE_STRING);
 
+  /**
+   * GtkosxApplication::MultiMediaKey:
+   * @app: The application object
+   * @keyCode: code of the key
+   * @isDown: is the key pressed
+   * @repeat: key repeat?
+   * @user_data: Data attached at connection
+   *
+   * Emitted when a multimedia key is pressed or released.
+   *
+   * Returns: Boolean indicating that the multimedia key should not be emitted.
+   */
+  gtkosx_application_signals[MultiMediaKey] =
+    g_signal_new ("MultiMediaKey",
+                  GTKOSX_TYPE_APPLICATION,
+                  G_SIGNAL_NO_RECURSE | G_SIGNAL_ACTION,
+                  0, NULL, NULL,
+                  g_cclosure_marshal_BOOLEAN__INT_BOOLEAN_BOOLEAN,
+                  G_TYPE_BOOLEAN, 3, G_TYPE_INT, G_TYPE_BOOLEAN, G_TYPE_BOOLEAN);
+
+  /**
+   * GtkosxApplication::NSApplicationReopen:
+   * @app: The application object
+   * @flag: are there any open windows
+   *
+   * Emitted when the user clicks on the dock icon or relaunches the application.
+   * https://developer.apple.com/library/mac/documentation/Cocoa/Reference/NSApplicationDelegate_Protocol/Reference/Reference.html#jumpTo_29
+   *
+   * Returns: Boolean indicating the application should behave by default,
+   * i.e. return false if you have handled the event yourself.
+   */
+  gtkosx_application_signals[Reopen] =
+    g_signal_new ("NSApplicationReopen",
+                  GTKOSX_TYPE_APPLICATION,
+                  G_SIGNAL_NO_RECURSE | G_SIGNAL_ACTION,
+                  0, NULL, NULL,
+                  g_cclosure_marshal_BOOLEAN__BOOLEAN,
+                  G_TYPE_BOOLEAN, 1, G_TYPE_BOOLEAN);
+
 }
 
 /**
@@ -685,6 +817,10 @@ void
 gtkosx_application_ready (GtkosxApplication *self)
 {
   [NSApp finishLaunching];
+  if(self->priv->listen_for_multimedia_keys)
+  {
+    [self->priv->delegate installEventTap];
+  }
 }
 
 /*

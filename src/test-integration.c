@@ -616,8 +616,16 @@ app_will_quit_cb (GtkosxApplication *app, gpointer data)
 static gboolean
 app_open_file_cb (GtkosxApplication *app, gchar *path, gpointer user_data)
 {
-  g_print ("File open event for %s", path);
+  g_print ("File open event for %s\n", path);
   return FALSE;
+}
+
+static gboolean
+app_mm_key_cb (GtkosxApplication *app, int keyCode, gboolean isDown, gboolean isRepeat, gpointer user_data)
+{
+  g_print ("MM KEY EVENT for key %i\n", keyCode);
+  if(keyCode == 16) return TRUE;
+  else return FALSE;
 }
 
 #endif //GTKOSXAPPLICATION
@@ -851,10 +859,13 @@ main (int argc, char **argv)
                       G_CALLBACK (app_will_quit_cb), NULL);
     g_signal_connect (theApp, "NSApplicationOpenFile",
                       G_CALLBACK (app_open_file_cb), NULL);
+    g_signal_connect (theApp, "MultiMediaKey",
+                      G_CALLBACK (app_mm_key_cb), NULL);
   }
 # ifndef QUARTZ_HANDLERS
   gtkosx_application_set_use_quartz_accelerators (theApp, FALSE);
 # endif //QUARTZ_HANDLERS
+  gtkosx_application_set_listen_for_multimedia_keys (theApp, TRUE);
   gtkosx_application_ready (theApp);
   {
     const gchar *id = gtkosx_application_get_bundle_id ();

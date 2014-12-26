@@ -34,6 +34,7 @@
 struct _GtkosxApplicationPrivate
 {
   gboolean use_quartz_accelerators;
+  gboolean listen_for_multimedia_keys;
   NSMenu *dock_menu;
   GtkApplicationNotificationObject *notify;
   GtkApplicationDelegate *delegate;
