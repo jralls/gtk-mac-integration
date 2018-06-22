@@ -669,10 +669,8 @@ cocoa_menu_item_add_submenu (GtkMenuShell *menu_shell,
         /* Don't want separators on the menubar */
         continue;
 
-      if (GTK_IS_SEPARATOR_MENU_ITEM (menu_item) &&
-	  (last_item == NULL || GTK_IS_SEPARATOR_MENU_ITEM (last_item)))
-	/* Don't put a separator at the top, nor make separators with
-	 * nothing between them.
+      if (GTK_IS_SEPARATOR_MENU_ITEM (menu_item) && (last_item == NULL))
+	/* Don't put a separator at the top.
 	 */
 	continue;
 
